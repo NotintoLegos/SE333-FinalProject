@@ -1,0 +1,65 @@
+name: Main Project Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '*.py'
+      - 'mcp_servers/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/test-main.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '*.py'
+      - 'mcp_servers/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+        if [ -f pyproject.toml ]; then pip install -e .; fi
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+      continue-on-error: true
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella-py${{ matrix.python-version }}
+        fail_ci_if_error: false
+      if: always()
+
+    - name: Test main.py
+      run: |
+        python main.py
+      continue-on-error: true
+
+    - name: Test server.py imports
+      run: |
+        python -c "import sys; sys.path.insert(0, 'mcp_servers'); from server import mcp; print('server.py imports successfully')"
+      continue-on-error: true
