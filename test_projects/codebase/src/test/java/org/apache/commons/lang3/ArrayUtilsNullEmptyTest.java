@@ -1,4 +1,4 @@
-package test.java.org.apache.commons.lang3;
+package org.apache.commons.lang3;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
