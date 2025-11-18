@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import fastmcp
+
 
 @mcp.tool()
 def parse_jacoco_report(report_path: str) -> dict:
